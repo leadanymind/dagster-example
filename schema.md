@@ -1,0 +1,6 @@
+The schema in Snowflake follows a Kimball design with four layers. It's got a RAW layer that acts as a staging area before data is merged into a persistent layer. The PSA layer is the persistent layer of the data. We then have a PREP layer where we transform the data from the document based storage of the data in the PSA layer into a tabular view of only the active data (data whose end_ts year is 9999). The presentation layer just obfuscates that prep layer by creating another view the just selects * of the prep layer.
+
+RAW layer schema has the columns: DOC=variant, KEY=varchar,BATCH_TS=timestamp_ltz,SOURCE=varchar
+PSA layer schema has the columns: DOC=variant, DOC_HASH=binary, KEY_DOC=variant, KEY_DOC_HASH=binary, START_TS=timestamp_ltz, END_TS=timestamp_ltz, BATCH_TS=timestamp_ltz, SOURCE=varchar and the primary key is the keydoc_hash AND start_ts 
+
+Data is ingested into the RAW layer, though there is an exception that if the data is ingested through FiveTran, we skip the RAW layer, and use the schema fivetran copies to, as our RAW layer. We then need to run a step/process to merge from RAW into PSA. This should automatically propagate to the PREP and PRES layer since they're just views (though at some point we'd want it to be a materialized view)
