@@ -1,0 +1,200 @@
+# Dataset Configuration
+# This file defines all databases, schemas, and entities for the ETL pipeline.
+#
+# Structure:
+#   Snowflake Account
+#   ├── DATABASE_1
+#   │   ├── RAW (schema)
+#   │   ├── PSA (schema)
+#   │   ├── PREP (schema)
+#   │   └── PRES (schema)
+#   └── DATABASE_2
+#       ├── RAW (schema)
+#       ...
+
+databases:
+  # ============================================================================
+  # SALES Database
+  # ============================================================================
+  - name: SALES_DB
+    description: "Sales and order data"
+    raw_schema: RAW
+    psa_schema: PSA
+    prep_schema: PREP
+    pres_schema: PRES
+    entities:
+      - name: customers
+        key_field: "customer_id"
+        description: "Customer master data"
+        prep_columns:
+          - name: customer_id
+            expression: "DOC:customer_id::VARCHAR"
+          - name: name
+            expression: "DOC:name::VARCHAR"
+          - name: email
+            expression: "DOC:email::VARCHAR"
+          - name: created_at
+            expression: "DOC:created_at::TIMESTAMP"
+
+      - name: orders
+        key_field: "order_id"
+        description: "Sales orders"
+        prep_columns:
+          - name: order_id
+            expression: "DOC:order_id::VARCHAR"
+          - name: customer_id
+            expression: "DOC:customer_id::VARCHAR"
+          - name: order_date
+            expression: "DOC:order_date::DATE"
+          - name: total_amount
+            expression: "DOC:total_amount::DECIMAL(18,2)"
+          - name: status
+            expression: "DOC:status::VARCHAR"
+
+      - name: order_items
+        key_field: "item_id"
+        description: "Line items for orders"
+        prep_columns:
+          - name: item_id
+            expression: "DOC:item_id::VARCHAR"
+          - name: order_id
+            expression: "DOC:order_id::VARCHAR"
+          - name: product_id
+            expression: "DOC:product_id::VARCHAR"
+          - name: quantity
+            expression: "DOC:quantity::INTEGER"
+          - name: unit_price
+            expression: "DOC:unit_price::DECIMAL(18,2)"
+
+  # ============================================================================
+  # MARKETING Database
+  # ============================================================================
+  - name: MARKETING_DB
+    description: "Marketing campaigns and analytics"
+    raw_schema: RAW
+    psa_schema: PSA
+    prep_schema: PREP
+    pres_schema: PRES
+    entities:
+      - name: campaigns
+        key_field: "campaign_id"
+        description: "Marketing campaigns"
+        prep_columns:
+          - name: campaign_id
+            expression: "DOC:campaign_id::VARCHAR"
+          - name: name
+            expression: "DOC:name::VARCHAR"
+          - name: channel
+            expression: "DOC:channel::VARCHAR"
+          - name: start_date
+            expression: "DOC:start_date::DATE"
+          - name: end_date
+            expression: "DOC:end_date::DATE"
+          - name: budget
+            expression: "DOC:budget::DECIMAL(18,2)"
+
+      - name: leads
+        key_field: "lead_id"
+        description: "Marketing leads"
+        prep_columns:
+          - name: lead_id
+            expression: "DOC:lead_id::VARCHAR"
+          - name: campaign_id
+            expression: "DOC:campaign_id::VARCHAR"
+          - name: email
+            expression: "DOC:email::VARCHAR"
+          - name: source
+            expression: "DOC:source::VARCHAR"
+          - name: created_at
+            expression: "DOC:created_at::TIMESTAMP"
+
+  # ============================================================================
+  # INVENTORY Database
+  # ============================================================================
+  - name: INVENTORY_DB
+    description: "Product and inventory management"
+    raw_schema: RAW
+    psa_schema: PSA
+    prep_schema: PREP
+    pres_schema: PRES
+    entities:
+      - name: products
+        key_field: "product_id"
+        description: "Product catalog"
+        prep_columns:
+          - name: product_id
+            expression: "DOC:product_id::VARCHAR"
+          - name: sku
+            expression: "DOC:sku::VARCHAR"
+          - name: name
+            expression: "DOC:name::VARCHAR"
+          - name: category
+            expression: "DOC:category::VARCHAR"
+          - name: price
+            expression: "DOC:price::DECIMAL(18,2)"
+
+      - name: inventory_levels
+        key_field: "inventory_id"
+        description: "Current inventory levels"
+        prep_columns:
+          - name: inventory_id
+            expression: "DOC:inventory_id::VARCHAR"
+          - name: product_id
+            expression: "DOC:product_id::VARCHAR"
+          - name: warehouse_id
+            expression: "DOC:warehouse_id::VARCHAR"
+          - name: quantity
+            expression: "DOC:quantity::INTEGER"
+          - name: last_updated
+            expression: "DOC:last_updated::TIMESTAMP"
+
+      - name: warehouses
+        key_field: "warehouse_id"
+        description: "Warehouse locations"
+        prep_columns:
+          - name: warehouse_id
+            expression: "DOC:warehouse_id::VARCHAR"
+          - name: name
+            expression: "DOC:name::VARCHAR"
+          - name: location
+            expression: "DOC:location::VARCHAR"
+          - name: capacity
+            expression: "DOC:capacity::INTEGER"
+
+  # ============================================================================
+  # FINANCE Database
+  # ============================================================================
+  - name: FINANCE_DB
+    description: "Financial transactions and reporting"
+    raw_schema: RAW
+    psa_schema: PSA
+    prep_schema: PREP
+    pres_schema: PRES
+    entities:
+      - name: transactions
+        key_field: "transaction_id"
+        description: "Financial transactions"
+        prep_columns:
+          - name: transaction_id
+            expression: "DOC:transaction_id::VARCHAR"
+          - name: account_id
+            expression: "DOC:account_id::VARCHAR"
+          - name: transaction_date
+            expression: "DOC:transaction_date::DATE"
+          - name: amount
+            expression: "DOC:amount::DECIMAL(18,2)"
+          - name: type
+            expression: "DOC:type::VARCHAR"
+
+      - name: accounts
+        key_field: "account_id"
+        description: "Chart of accounts"
+        prep_columns:
+          - name: account_id
+            expression: "DOC:account_id::VARCHAR"
+          - name: name
+            expression: "DOC:name::VARCHAR"
+          - name: type
+            expression: "DOC:type::VARCHAR"
+          - name: parent_account_id
+            expression: "DOC:parent_account_id::VARCHAR"

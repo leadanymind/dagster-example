@@ -3,34 +3,43 @@
 from contextlib import contextmanager
 from typing import Iterator, Any
 
-from dagster import ConfigurableResource, InitResourceContext
+from dagster import ConfigurableResource
 import snowflake.connector
 from snowflake.connector import SnowflakeConnection
 
 
 class SnowflakeResource(ConfigurableResource):
-    """Configurable Snowflake resource for Dagster pipelines."""
+    """Configurable Snowflake resource for Dagster pipelines.
+
+    This resource manages Snowflake connections and provides methods for
+    executing SQL statements. It supports multi-database operations where
+    database names are specified in the SQL statements themselves.
+    """
 
     account: str
     user: str
     password: str
     warehouse: str
-    database: str
     role: str
-    raw_schema: str = "RAW"
-    psa_schema: str = "PSA"
-    prep_schema: str = "PREP"
-    pres_schema: str = "PRES"
 
     @contextmanager
-    def get_connection(self, schema: str | None = None) -> Iterator[SnowflakeConnection]:
-        """Get a Snowflake connection context manager."""
+    def get_connection(
+        self,
+        database: str | None = None,
+        schema: str | None = None,
+    ) -> Iterator[SnowflakeConnection]:
+        """Get a Snowflake connection context manager.
+
+        Args:
+            database: Optional database to connect to
+            schema: Optional schema to connect to
+        """
         conn = snowflake.connector.connect(
             account=self.account,
             user=self.user,
             password=self.password,
             warehouse=self.warehouse,
-            database=self.database,
+            database=database,
             schema=schema,
             role=self.role,
         )
@@ -42,11 +51,19 @@ class SnowflakeResource(ConfigurableResource):
     def execute_sql(
         self,
         sql: str,
+        database: str | None = None,
         schema: str | None = None,
         params: dict[str, Any] | None = None,
     ) -> list[tuple]:
-        """Execute SQL and return results."""
-        with self.get_connection(schema) as conn:
+        """Execute SQL and return results.
+
+        Args:
+            sql: SQL statement to execute
+            database: Optional database context
+            schema: Optional schema context
+            params: Optional query parameters
+        """
+        with self.get_connection(database, schema) as conn:
             cursor = conn.cursor()
             try:
                 cursor.execute(sql, params or {})
@@ -57,10 +74,17 @@ class SnowflakeResource(ConfigurableResource):
     def execute_sql_multi(
         self,
         statements: list[str],
+        database: str | None = None,
         schema: str | None = None,
     ) -> None:
-        """Execute multiple SQL statements."""
-        with self.get_connection(schema) as conn:
+        """Execute multiple SQL statements.
+
+        Args:
+            statements: List of SQL statements to execute
+            database: Optional database context
+            schema: Optional schema context
+        """
+        with self.get_connection(database, schema) as conn:
             cursor = conn.cursor()
             try:
                 for stmt in statements:
@@ -68,19 +92,3 @@ class SnowflakeResource(ConfigurableResource):
                         cursor.execute(stmt)
             finally:
                 cursor.close()
-
-
-def snowflake_resource(context: InitResourceContext) -> SnowflakeResource:
-    """Factory function for SnowflakeResource."""
-    return SnowflakeResource(
-        account=context.resource_config["account"],
-        user=context.resource_config["user"],
-        password=context.resource_config["password"],
-        warehouse=context.resource_config["warehouse"],
-        database=context.resource_config["database"],
-        role=context.resource_config["role"],
-        raw_schema=context.resource_config.get("raw_schema", "RAW"),
-        psa_schema=context.resource_config.get("psa_schema", "PSA"),
-        prep_schema=context.resource_config.get("prep_schema", "PREP"),
-        pres_schema=context.resource_config.get("pres_schema", "PRES"),
-    )

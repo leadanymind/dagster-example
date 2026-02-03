@@ -12,23 +12,27 @@ def get_role_ddl() -> list[str]:
         "CREATE ROLE IF NOT EXISTS DATA_ENGINEER_ROLE",
         # Reader Role - read-only access to PRES layer
         "CREATE ROLE IF NOT EXISTS DATA_READER_ROLE",
+        # Role hierarchy - Data Engineer inherits from Analyst which inherits from Reader
+        "GRANT ROLE DATA_READER_ROLE TO ROLE DATA_ANALYST_ROLE",
+        "GRANT ROLE DATA_ANALYST_ROLE TO ROLE DATA_ENGINEER_ROLE",
+        "GRANT ROLE ETL_SERVICE_ROLE TO ROLE DATA_ENGINEER_ROLE",
     ]
 
 
-def get_schema_permissions(
+def get_database_permissions(
     database: str,
     raw_schema: str,
     psa_schema: str,
     prep_schema: str,
     pres_schema: str,
 ) -> list[str]:
-    """Generate GRANT statements for schema permissions."""
+    """Generate GRANT statements for a single database's permissions."""
     return [
         # Database usage grants
-        "GRANT USAGE ON DATABASE {db} TO ROLE ETL_SERVICE_ROLE".format(db=database),
-        "GRANT USAGE ON DATABASE {db} TO ROLE DATA_ANALYST_ROLE".format(db=database),
-        "GRANT USAGE ON DATABASE {db} TO ROLE DATA_ENGINEER_ROLE".format(db=database),
-        "GRANT USAGE ON DATABASE {db} TO ROLE DATA_READER_ROLE".format(db=database),
+        f"GRANT USAGE ON DATABASE {database} TO ROLE ETL_SERVICE_ROLE",
+        f"GRANT USAGE ON DATABASE {database} TO ROLE DATA_ANALYST_ROLE",
+        f"GRANT USAGE ON DATABASE {database} TO ROLE DATA_ENGINEER_ROLE",
+        f"GRANT USAGE ON DATABASE {database} TO ROLE DATA_READER_ROLE",
         # ETL Service Role permissions - RAW layer
         f"GRANT USAGE ON SCHEMA {database}.{raw_schema} TO ROLE ETL_SERVICE_ROLE",
         f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA {database}.{raw_schema} TO ROLE ETL_SERVICE_ROLE",
@@ -61,8 +65,8 @@ def get_schema_permissions(
         f"GRANT ALL ON SCHEMA {database}.{pres_schema} TO ROLE DATA_ENGINEER_ROLE",
         f"GRANT ALL ON ALL VIEWS IN SCHEMA {database}.{pres_schema} TO ROLE DATA_ENGINEER_ROLE",
         f"GRANT ALL ON FUTURE VIEWS IN SCHEMA {database}.{pres_schema} TO ROLE DATA_ENGINEER_ROLE",
-        # Role hierarchy - Data Engineer inherits from Analyst which inherits from Reader
-        "GRANT ROLE DATA_READER_ROLE TO ROLE DATA_ANALYST_ROLE",
-        "GRANT ROLE DATA_ANALYST_ROLE TO ROLE DATA_ENGINEER_ROLE",
-        "GRANT ROLE ETL_SERVICE_ROLE TO ROLE DATA_ENGINEER_ROLE",
     ]
+
+
+# Alias for backward compatibility
+get_schema_permissions = get_database_permissions

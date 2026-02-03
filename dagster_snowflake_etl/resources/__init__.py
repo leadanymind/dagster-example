@@ -1,5 +1,5 @@
-"""Resources for Snowflake connections and operations."""
+"""Dagster resources."""
 
-from .snowflake import SnowflakeResource, snowflake_resource
+from .snowflake import SnowflakeResource
 
-__all__ = ["SnowflakeResource", "snowflake_resource"]
+__all__ = ["SnowflakeResource"]

@@ -1,25 +1,9 @@
-"""Dagster assets for ETL pipeline."""
+"""Dagster assets for ETL pipeline.
 
-from .schema_setup import (
-    raw_schema,
-    psa_schema,
-    prep_schema,
-    pres_schema,
-)
-from .governance import (
-    data_governance_roles,
-    schema_permissions,
-)
-from .etl import (
-    raw_to_psa_merge,
-)
+Assets are generated dynamically from configuration.
+See assets/factory.py for the asset generation logic.
+"""
 
-__all__ = [
-    "raw_schema",
-    "psa_schema",
-    "prep_schema",
-    "pres_schema",
-    "data_governance_roles",
-    "schema_permissions",
-    "raw_to_psa_merge",
-]
+from .factory import build_assets_from_config
+
+__all__ = ["build_assets_from_config"]

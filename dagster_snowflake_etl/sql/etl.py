@@ -1,12 +1,18 @@
 """SQL templates for ETL operations."""
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dagster_snowflake_etl.config.datasets import EntityConfig, DatabaseConfig
+
 
 def get_raw_to_psa_merge_sql(
     database: str,
     raw_schema: str,
     psa_schema: str,
-    raw_table: str = "RAW_DATA",
-    psa_table: str = "PSA_DATA",
+    raw_table: str,
+    psa_table: str,
 ) -> str:
     """Generate MERGE SQL for RAW to PSA layer.
 
@@ -52,8 +58,8 @@ def get_close_changed_records_sql(
     database: str,
     raw_schema: str,
     psa_schema: str,
-    raw_table: str = "RAW_DATA",
-    psa_table: str = "PSA_DATA",
+    raw_table: str,
+    psa_table: str,
 ) -> str:
     """Generate SQL to close records in PSA when document has changed.
 
@@ -77,7 +83,39 @@ def get_close_changed_records_sql(
 def get_truncate_raw_sql(
     database: str,
     raw_schema: str,
-    raw_table: str = "RAW_DATA",
+    raw_table: str,
 ) -> str:
     """Generate SQL to truncate RAW table after successful merge."""
     return f"TRUNCATE TABLE {database}.{raw_schema}.{raw_table}"
+
+
+# Entity-based convenience functions
+def get_entity_merge_sql(db_config: DatabaseConfig, entity: EntityConfig) -> str:
+    """Generate merge SQL for an entity."""
+    return get_raw_to_psa_merge_sql(
+        database=db_config.name,
+        raw_schema=db_config.raw_schema,
+        psa_schema=db_config.psa_schema,
+        raw_table=entity.raw_table,
+        psa_table=entity.psa_table,
+    )
+
+
+def get_entity_close_sql(db_config: DatabaseConfig, entity: EntityConfig) -> str:
+    """Generate close changed records SQL for an entity."""
+    return get_close_changed_records_sql(
+        database=db_config.name,
+        raw_schema=db_config.raw_schema,
+        psa_schema=db_config.psa_schema,
+        raw_table=entity.raw_table,
+        psa_table=entity.psa_table,
+    )
+
+
+def get_entity_truncate_sql(db_config: DatabaseConfig, entity: EntityConfig) -> str:
+    """Generate truncate RAW table SQL for an entity."""
+    return get_truncate_raw_sql(
+        database=db_config.name,
+        raw_schema=db_config.raw_schema,
+        raw_table=entity.raw_table,
+    )

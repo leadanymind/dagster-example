@@ -10,6 +10,7 @@ dependencies = [
     "dagster-snowflake>=0.22.0",
     "snowflake-connector-python>=3.6.0",
     "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",
 ]
 
 [project.optional-dependencies]
